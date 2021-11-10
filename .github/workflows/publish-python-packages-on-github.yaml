@@ -6,6 +6,20 @@ on:
       asset_name:
         description: Name of the uploaded release asset
         type: string
+      version_from_tag:
+        description: Set version from Git tag
+        required: true
+        type: boolean
+        default: false
+      version_file:
+        description: File for the replacement
+        type: string
+      version_search:
+        description: Version string that will be replaced
+        type: string
+      version_replace:
+        description: New version string with placeholder
+        type: string
 
 jobs:
   build-and-release:
@@ -25,6 +39,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade build
+
+      - name: Set version
+        if: ${{ inputs.version_from_tag }}
+        run: |
+          version=${GITHUB_REF#refs/tags/}
+          sed -i "s/${search}/${replace/\{version\}/${version}}/" ${file}
+        env:
+          file: ${{ inputs.version_file }}
+          search: ${{ inputs.version_search }}
+          replace: ${{ inputs.version_replace }}
 
       - name: Build package
         run: |
